@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-sky-blue {
+            background-color: #e0f2f7; /* A light sky blue */
+        }
+        .text-sky-blue {
+            color: #29b6f6; /* A medium sky blue */
+        }
+        .border-sky-blue {
+            border-color: #29b6f6;
+        }
+        .focus\:ring-sky-blue:focus {
+            --tw-ring-color: #29b6f6;
+        }
+
+        .bg-sky-blue-hover:hover {
+            background-color: #81d4fa; /* Lighter shade for hover effect */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex justify-center items-center min-h-screen bg-sky-blue">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+        <h1 class="text-2xl font-semibold text-sky-blue text-center mb-6">Speech Recognition Search</h1>
+        <div class="flex items-center mb-4">
+            <input type="text" id="search-box" placeholder="Speak to search..." class="flex-grow rounded-l-md border-gray-300 focus:ring-2 focus:ring-sky-blue border-sky-blue p-2">
+            <button id="start-button" class="bg-blue-500 hover:bg-sky-blue-hover text-white rounded-r-md p-2 focus:outline-none focus:ring-2 focus:ring-sky-blue focus:ring-opacity-50">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic">
+                    <path d="M12 13c-1.654 0-3-1.346-3-3V5a3 3 0 0 1 6 0v5c0 1.654-1.346 3-3 3z"></path>
+                    <path d="M19 10v2c0 5.228-4.272 9.5-9.5 9.5S0 17.228 0 12v-2"></path>
+                    <line x1="12" x2="12" y1="19" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+        <div id="error-message" class="mt-4 p-4 bg-red-100 text-red-600 rounded-md border border-red-300 hidden">
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const searchBox = document.getElementById('search-box');
+            const startButton = document.getElementById('start-button');
+            const errorMessageElement = document.getElementById('error-message');
+
+            let recognition;
+            let isListening = false;
+
+            // Check for speech recognition support
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+            } else if ('speechRecognition' in window) {
+                recognition = new speechRecognition();
+            } else {
+                errorMessageElement.textContent = "Speech recognition is not supported in this browser.";
+                errorMessageElement.classList.remove('hidden');
+                startButton.disabled = true;
+                return;
+            }
+
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US'; // Set the language
+
+            // Speech recognition start event
+            recognition.onstart = function() {
+                isListening = true;
+                startButton.classList.remove('bg-blue-500', 'hover:bg-sky-blue-hover');
+                startButton.classList.add('bg-green-500', 'hover:bg-green-600');
+                searchBox.placeholder = "Listening...";
+            };
+
+            // Speech recognition end event
+            recognition.onend = function() {
+                isListening = false;
+                startButton.classList.remove('bg-green-500', 'hover:bg-green-600');
+                startButton.classList.add('bg-blue-500', 'hover:bg-sky-blue-hover');
+                searchBox.placeholder = "Speak to search...";
+            };
+
+            // Speech recognition result event
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                searchBox.value = transcript;
+                performGoogleSearch(transcript);
+            };
+
+            // Speech recognition error event
+            recognition.onerror = function(event) {
+                isListening = false;
+                startButton.classList.remove('bg-green-500', 'hover:bg-green-600');
+                startButton.classList.add('bg-blue-500', 'hover:bg-sky-blue-hover');
+                searchBox.placeholder = "Speak to search...";
+                let errorMessage = 'An error occurred: ' + event.error;
+                if (event.error === 'no-speech') {
+                    errorMessage = 'No speech was detected. Please try again.';
+                } else if (event.error === 'aborted') {
+                    errorMessage = 'Speech recognition was aborted.';
+                } else if (event.error === 'network') {
+                    errorMessage = 'A network error occurred. Please check your internet connection.';
+                } else if (event.error === 'audio-capture') {
+                    errorMessage = 'Audio capture failed. Please make sure your microphone is working.';
+                } else if (event.error === 'not-allowed') {
+                    errorMessage = 'Speech recognition permission was denied. Please allow microphone access in your browser settings.';
+                } else if (event.error === 'service-unavailable') {
+                    errorMessage = 'Speech recognition service is unavailable. Please try again later.';
+                } else if (event.error === 'language-not-supported') {
+                    errorMessage = 'The selected language is not supported.';
+                }
+                errorMessageElement.textContent = errorMessage;
+                errorMessageElement.classList.remove('hidden');
+            };
+
+            // Start/Stop button click event
+            startButton.addEventListener('click', function() {
+                errorMessageElement.classList.add('hidden');
+                if (isListening) {
+                    recognition.stop();
+                } else {
+                    recognition.start();
+                }
+            });
+
+            // Perform Google search function
+            function performGoogleSearch(query) {
+                if (query.trim() !== '') {
+                    const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                    window.location.href = googleSearchUrl;
+                }
+            }
+
+            // Perform Google search on Enter key press in the search box
+            searchBox.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    performGoogleSearch(searchBox.value);
+                }
+            });
+        };
+    </script>
+</body>
+</html>
