@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>English to Multilingual Translator</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(to right, #e0c3fc, #8ec5fc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        select {
+            padding: 8px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #5a64f4;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #4a54e1;
+        }
+
+        p {
+            font-size: 18px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎙️ Speak in English, see in multiple languages</h2>
+        <label for="targetLanguage">Translate to:</label>
+        <select id="targetLanguage">
+            <option value="ta">Tamil</option>
+            <option value="hi">Hindi</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="es">Spanish</option>
+            </select>
+        <button onclick="startRecognition()">Start Speaking</button>
+        <p><strong>English:</strong> <span id="englishText"></span></p>
+        <p><strong>Translation:</strong> <span id="translatedText"></span></p>
+    </div>
+
+    <script>
+        const englishSpan = document.getElementById('englishText');
+        const translatedSpan = document.getElementById('translatedText');
+        const languageSelect = document.getElementById('targetLanguage');
+
+        function startRecognition() {
+            const recognition = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                englishSpan.textContent = text;
+                translateText(text, languageSelect.value);
+            };
+        }
+
+        function translateText(text, targetLang) {
+            const translateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+            fetch(translateUrl)
+                .then(res => res.json())
+                .then(data => {
+                    const translation = data[0][0][0];
+                    translatedSpan.textContent = translation;
+                })
+                .catch(err => {
+                    translatedSpan.textContent = "Translation failed.";
+                    console.error(err);
+                });
+        }
+    </script>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background-color: #000; /* Solid black background for maximum neon contrast */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: sans-serif;
+    }
+
+    .container {
+        text-align: center;
+        background-color: rgba(0, 0, 0, 0.8); /* Slightly transparent black container */
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 0 30px rgba(153, 0, 255, 0.6); /* Initial RGB mix shadow */
+        color: #fff;
+    }
+
+    label {
+        font-size: 18px;
+        color: #0ff; /* Cyan for a neon look */
+        margin-right: 15px;
+        text-shadow: 0 0 5px #0ff; /* Neon glow for labels */
+    }
+
+    select {
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #0f0; /* Green border for select */
+        background-color: #222;
+        color: #fff;
+        margin-bottom: 20px;
+    }
+
+    option {
+        background-color: #222;
+        color: #fff;
+    }
+
+    button {
+        padding: 15px 30px; /* Larger button */
+        font-size: 20px;
+        border: none;
+        background-color: #f0f; /* Magenta button */
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        margin: 20px 0;
+        box-shadow: 0 0 15px #f0f; /* Strong neon button shadow */
+        transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
+    }
+
+    button:hover {
+        background-color: #e007e0; /* Slightly darker magenta on hover */
+        box-shadow: 0 0 20px #e007e0; /* Stronger hover shadow */
+    }
+
+    p {
+        font-size: 20px;
+        color: #ff0; /* Yellow for paragraph text */
+        margin: 10px 0;
+        text-shadow: 0 0 5px #ff0; /* Subtle neon glow for text */
+    }
+
+    h2 {
+        color: #0f0; /* Bright green for heading */
+</body>
+</html>
+
