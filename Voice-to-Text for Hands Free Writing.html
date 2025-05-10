@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text - Neon RGB Writing</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #111; /* Very dark background */
+            color: #fff; /* Default white text */
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #00ff88; /* Bright green heading */
+            margin-bottom: 25px;
+            text-align: left;
+            width: 80%;
+            max-width: 600px;
+            text-shadow: 0 0 10px #00ff88; /* Neon glow */
+        }
+
+        .container {
+            background-color: #222;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 255, 136, 0.2); /* Green neon shadow */
+            width: 80%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            border: 1px solid #00ff8833; /* Subtle neon green border */
+        }
+
+        textarea {
+            width: calc(100% - 20px);
+            min-height: 150px;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #555;
+            border-radius: 6px;
+            font-size: 16px;
+            color: #ccff00; /* Bright yellow text in textarea */
+            background-color: #333;
+            box-sizing: border-box;
+            align-self: stretch;
+            text-shadow: 0 0 5px #ccff0080; /* Subtle yellow glow */
+        }
+
+        .button-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-self: flex-start;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background-color: #ff44cc; /* Bright pink button */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out, box-shadow 0.3s ease;
+            box-shadow: 0 0 8px #ff44cc80; /* Pink neon glow */
+        }
+
+        button:hover {
+            background-color: #d81b60; /* Darker pink on hover */
+            transform: scale(1.05);
+            box-shadow: 0 0 12px #ff44cc; /* Stronger glow on hover */
+        }
+
+        .recording-indicator {
+            width: 15px;
+            height: 15px;
+            background-color: #00bfff; /* Bright cyan */
+            border-radius: 50%; /* Circle shape */
+            box-shadow: 0 0 8px #00bfff80; /* Cyan neon glow */
+            animation: neon-pulse 1.5s infinite alternate;
+        }
+
+        @keyframes neon-pulse {
+            from { box-shadow: 0 0 8px #00bfff80; }
+            to { box-shadow: 0 0 15px #00bfff; }
+        }
+
+        .recording .recording-indicator {
+            background-color: #ff00ff; /* Bright magenta when recording */
+            box-shadow: 0 0 10px #ff00ff; /* Magenta neon glow */
+        }
+
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #00ffff; /* Bright cyan status text */
+            text-align: left;
+            width: 100%;
+            text-shadow: 0 0 5px #00ffff80; /* Cyan glow */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hands-Free Writing</h1>
+        <textarea id="writtenText" placeholder="Start speaking to type..."></textarea>
+        <div class="button-container">
+            <button id="startButton">Start Recording</button>
+            <div class="recording-indicator"></div>
+        </div>
+        <p id="status">Click "Start Recording" and begin speaking.</p>
+    </div>
+
+    <script>
+        const writtenTextElement = document.getElementById('writtenText');
+        const startButton = document.getElementById('startButton');
+        const statusElement = document.getElementById('status');
+        const recordingIndicator = document.querySelector('.recording-indicator');
+        const container = document.querySelector('.container');
+        let recognition;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US'; // You can set the preferred language
+
+            recognition.onstart = () => {
+                isRecording = true;
+                startButton.textContent = 'Stop Recording';
+                statusElement.textContent = 'Recording...';
+                container.classList.add('recording');
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' '; // Add space after final results
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+
+                writtenTextElement.value = finalTranscript + interimTranscript;
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                statusElement.textContent = `Error: ${event.error}`;
+                container.classList.remove('recording');
+                isRecording = false;
+                startButton.textContent = 'Start Recording';
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                startButton.textContent = 'Start Recording';
+                statusElement.textContent = 'Click "Start Recording" and begin speaking.';
+                container.classList.remove('recording');
+            };
+
+            startButton.addEventListener('click', () => {
+                if (!isRecording) {
+                    writtenTextElement.value = ''; // Clear previous text when starting new recording
+                    recognition.start();
+                } else {
+                    recognition.stop();
+                }
+            });
+        } else {
+            statusElement.textContent = 'Your browser does not support Speech Recognition.';
+            startButton.disabled = true;
+        }
+    </script>
+</body>
+</html>
